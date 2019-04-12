@@ -25,11 +25,14 @@ namespace WebApplication
         }
 
         public IConfiguration Configuration { get; }
+        private const string CorsPolicyName = "EnableCORS";
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services
+                .AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -47,6 +50,19 @@ namespace WebApplication
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AuthConstant.Key))
                     };
                 });
+
+            // This is for simplicity purposes and should not be used like this in production.
+            services
+                .AddCors(options => {
+                    options.AddPolicy(CorsPolicyName, builder => {
+                        builder
+                            .AllowAnyOrigin()
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials()
+                            .Build();
+                    });
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -63,6 +79,8 @@ namespace WebApplication
             }
 
             app.UseAuthentication();
+
+            app.UseCors(CorsPolicyName);
 
             app.UseHttpsRedirection();
             app.UseMvc();
